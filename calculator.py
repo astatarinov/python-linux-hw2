@@ -51,6 +51,16 @@ class NothingToDoError(CalculatorError):
         super().__init__(self.message)
 
 
+class NoOperands(CalculatorError):
+    """
+    Raised if there is no operand for a valid operator
+    """
+    def __init__(self, operator):
+        self.operator = operator
+        self.message = f"Missing operand for operator {self.operator}"
+        super().__init__(self.message)
+
+
 class CustomCalc:
     def __init__(self):
         self.operators_priors = {
@@ -191,15 +201,18 @@ class CustomCalc:
             if token[0].isdigit():
                 stack.append(self.cast_number(token))
             else:
-                if token == '~':
-                    arg2 = stack.pop()
-                    arg1 = 0
-                    res = self.math_operation(arg1, arg2, token)
-                else:
-                    arg2 = stack.pop()
-                    arg1 = stack.pop()
-                    res = self.math_operation(arg1, arg2, token)
-                stack.append(res)
+                try:
+                    if token == '~':
+                        arg2 = stack.pop()
+                        arg1 = 0
+                        res = self.math_operation(arg1, arg2, token)
+                    else:
+                        arg2 = stack.pop()
+                        arg1 = stack.pop()
+                        res = self.math_operation(arg1, arg2, token)
+                    stack.append(res)
+                except IndexError:
+                    raise NoOperands(token)
         return stack.pop()
 
     def eval_math_expr(self, math_expr: str):
@@ -224,7 +237,7 @@ while True:
                     raise EmptyInputError
                 cal.eval_math_expr(s)
             except (EmptyInputError, ParenthesesError, UnexpectedInput,
-                    NothingToDoError, CalculatorZeroDivisionError) as ex:
+                    NothingToDoError, CalculatorZeroDivisionError, NoOperands) as ex:
                 print(f"Error occurred: {ex}\nLet's correct your expression and try again\n")
             except Exception as un_ex:
                 print("Unexpected error occurred :( \nLet's try another input.")
