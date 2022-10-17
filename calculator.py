@@ -1,15 +1,23 @@
-import sys
+class CalculatorZeroDivisionError(ZeroDivisionError):
+    """
+    Division by zero in evaluated expression
+    """
+    def __init__(self):
+        self.message = "Division by 0 appeared in your expression."
+        super().__init__(self.message)
 
 
 class CalculatorError(Exception):
-    """Base class for Calculator exceptions"""
-
+    """
+    Base class for Calculator exceptions
+    """
     pass
 
 
 class EmptyInputError(CalculatorError):
-    """Raised when on empty input"""
-
+    """
+    Raised on empty input
+    """
     def __init__(self):
         self.message = "Empty input was provided."
         super().__init__(self.message)
@@ -19,7 +27,6 @@ class ParenthesesError(CalculatorError):
     """
     Parentheses are used incorrectly
     """
-
     def __init__(self):
         self.message = "Not matching parentheses were found in math expression."
         super().__init__(self.message)
@@ -67,7 +74,7 @@ class CustomCalc:
         for s in math_str[start:]:
             if s.isdigit():
                 num_str += s
-            elif s == '.' and dots < 2:
+            elif s == '.' and dots < 1:
                 dots += 1
                 num_str += s
             else:
@@ -110,7 +117,7 @@ class CustomCalc:
             else:
                 raise UnexpectedInput(math_str[cur_pos])
         if operators == 0:
-            raise NothingToDoError
+            raise NothingToDoError()
         return token_list
 
     def check_parentheses(self, token_list: list):
@@ -168,8 +175,8 @@ class CustomCalc:
         elif operator == ':' or operator == '/':
             try:
                 res = arg1 / arg2
-            except ZeroDivisionError as ex:
-                sys.exit("You cannot divide by zero, check if math expression is correct")
+            except ZeroDivisionError:
+                raise CalculatorZeroDivisionError()
             return res
         else:
             return arg1 * arg2
@@ -207,14 +214,17 @@ class CustomCalc:
 
 
 cal = CustomCalc()
-print("Running calculator. Press ctrl + C or input 'q' to quit")
+print("Running calculator. Press ctrl + C or enter 'q' to quit")
 while True:
     try:
         s = input("Enter your expression: ")
         if s != 'q':
             try:
+                if len(s) == 0:
+                    raise EmptyInputError
                 cal.eval_math_expr(s)
-            except (EmptyInputError, ParenthesesError, UnexpectedInput, NothingToDoError) as ex:
+            except (EmptyInputError, ParenthesesError, UnexpectedInput,
+                    NothingToDoError, CalculatorZeroDivisionError) as ex:
                 print(f"Error occurred: {ex}\nLet's correct your expression and try again\n")
             except Exception as un_ex:
                 print("Unexpected error occurred :( \nLet's try another input.")
